@@ -1,0 +1,7 @@
+setuptools==39.0.1
+matplotlib==2.1.1
+pandas==0.23.0
+requests==2.18.4
+pick==0.6.4
+scipy==0.19.1
+numpy==1.13.3
