@@ -10,8 +10,7 @@ from matplotlib import pyplot as plt
 from matplotlib import pylab
 
 from shakemap_lookup import USGSshakemapGrid
-from shakemap_lookup import read_locations_csv
-from shakemap_lookup import add_intensities
+from shakemap_lookup import Locations
 
 
 # Parameters ------------------------------------------------------------------
@@ -40,10 +39,10 @@ def checkplot_inlocns(locns, thisSM):
     fig, ax = plt.subplots(1, 1, facecolor='white')
 
     # Plot locations
-    ax.plot(locns['lon'].values, locns['lat'].values, 'xk')
+    ax.plot(locns.df['lon'].values, locns.df['lat'].values, 'xk')
 
     # Plot the ones that got a shakemap intensity
-    inlocns = locns[~locns[intensMeasure + '_med'].isna()]
+    inlocns = locns.df[~locns.df[intensMeasure + '_med'].isna()]
     plt.plot(inlocns['lon'].values, inlocns['lat'].values, '+r')
 
     # Plot the bounding box of the shakemap
@@ -74,8 +73,8 @@ def checkplot_shakemaplookup(thisSM, locns, clims=(2.0, 10.0), dc=1.0):
                     extent=(thisSM.x0, thisSM.x1, thisSM.y0, thisSM.y1))
 
     # Add the locations
-    ax.scatter(locns['lon'].values, locns['lat'].values,
-               c=locns[thisSM.intensMeasure + '_med'].values, s=60.0,
+    ax.scatter(locns.df['lon'].values, locns.df['lat'].values,
+               c=locns.df[thisSM.intensMeasure + '_med'].values, s=60.0,
                cmap=cax.cmap, vmin=clims[0], vmax=clims[1], marker='v',
                edgecolors='k')
 
@@ -109,16 +108,16 @@ def main():
     shakemap = USGSshakemapGrid(ifile_sm, intensMeasure, ifile_unc)
 
     # Read locations into pandas array
-    locns = read_locations_csv(ifile_locns)
-    print "\t...%i locations" % len(locns)
+    locns = Locations(ifile_locns)
+    print "\t...%i locations" % len(locns.df)
 
     # Look up the intensities at the locations
-    add_intensities(locns, shakemap)
+    locns.add_intensities(shakemap)
     print("\t...%i locations with an intensity" %
-          locns[intensMeasure + '_med'].count())
+          locns.df[intensMeasure + '_med'].count())
 
     # Write the output file
-    locns.to_csv(ofile_locns, index=False)
+    locns.df.to_csv(ofile_locns, index=False)
     print("Written location details to %s" % ofile_locns)
 
     # Generate check plots

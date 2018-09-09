@@ -17,9 +17,7 @@ from matplotlib import pyplot as plt
 from matplotlib import pylab
 
 from shakemap_lookup import USGSshakemapGrid
-from shakemap_lookup import read_locations_csv
-from shakemap_lookup import add_intensities
-from shakemap_lookup import add_damageprobs
+from shakemap_lookup import Locations
 from shakemap_lookup import FragilityCurve
 
 # Parameters ------------------------------------------------------------------
@@ -70,7 +68,7 @@ def checkplot_interpolatedamage(frag, locns):
     for c in frag.damagestates():
         # Fieldname for the probabilities at these locations
         fnmDamage = 'prob_' + c
-        ax.plot(locns[fnmIntens].values, locns[fnmDamage].values, '+',
+        ax.plot(locns.df[fnmIntens].values, locns.df[fnmDamage].values, '+',
                 label='locations')
 
     ax.set_xlabel(frag.intensitymeasure)
@@ -103,18 +101,18 @@ def main():
 
     # Read locations into pandas array
     print("Reading locations from file...")
-    locns = read_locations_csv(ifile_locns)
-    print "\t...%i locations" % len(locns)
+    locns = Locations(ifile_locns)
+    print "\t...%i locations" % len(locns.df)
 
     # Look up the intensities at the locations
-    add_intensities(locns, shakemap)
+    locns.add_intensities(shakemap)
     print("\t...%i locations with an intensity" %
-          locns[intensMeasure + '_med'].count())
+          locns.df[intensMeasure + '_med'].count())
 
     # Remove locations where no intensity is found
     print("Removing %i locations without any intensity" %
-          sum(np.isnan(locns[intensMeasure + '_med'])))
-    locns = locns[~np.isnan(locns[intensMeasure + '_med'])]
+          sum(np.isnan(locns.df[intensMeasure + '_med'])))
+    locns.df = locns.df[~np.isnan(locns.df[intensMeasure + '_med'])]
 
     # Read fragility file into class object
     print("Reading fragility curves from file...")
@@ -122,17 +120,17 @@ def main():
 
     # Convert intensities to probability of damage at each state
     print("Getting damage at locations...")
-    add_damageprobs(locns, intensMeasure, frag, useMedian=True)
+    locns.add_damageprobs(intensMeasure, frag, useMedian=True)
 
     print(frag.mindamagestate())
     print("\t...%i locations with a chance of damage" %
-          sum(locns['prob_' + frag.mindamagestate()] > 0.0))
+          sum(locns.df['prob_' + frag.mindamagestate()] > 0.0))
     if(isKeepOnlyDamaged):
         print("\t...Keeping only locations with chance of damage")
-        locns = locns[locns['prob_' + frag.mindamagestate()] > 0.0]
+        locns.df = locns.df[locns.df['prob_' + frag.mindamagestate()] > 0.0]
 
     # Write the output file
-    locns.to_csv(ofile_locns, index=False)
+    locns.df.to_csv(ofile_locns, index=False)
     print("Written location details to %s" % ofile_locns)
 
     # Generate check plots
