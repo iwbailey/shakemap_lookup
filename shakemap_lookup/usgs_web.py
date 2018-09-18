@@ -114,7 +114,7 @@ def choose_event(evList, maxNchoice=20):
 
     # Extract a list of event names
     print("\nUSER SELECTION OF EVENT:")
-    print("==========================")
+    print("========================")
     for idx, n in enumerate(choices):
         print('%4i: %s (%s)' % (idx,
                                 n['properties']['title'],
@@ -135,7 +135,41 @@ def choose_event(evList, maxNchoice=20):
     return evList['features'][iEv]
 
 
+def choose_shakemap(smDetail):
+    """When there are multiple shakemaps for the same event, allow the user to
+    choose one
+
+    IN: output from the query for detailed event info
+    """
+
+    # Default is the first and only option
+    iEv = 0
+
+    # Check if there is more than one shakemap available
+    if len(smDetail) > 1:
+        print("\nUSER SELECTION OF SHAKEMAP:")
+        print("===========================")
+        # Loop through shakemaps in the detail
+        for idx, smd in enumerate(smDetail):
+            # Print the number
+            print("Option %i:" % idx)
+
+            # Print the shakemap details
+            for prop in ['eventsourcecode', 'version', 'process-timestamp']:
+                print('\t%18s: %s' % (prop, smd['properties'][prop]))
+        iEv = int(raw_input("\nChoice [default 0]: ") or 0)
+        print("\t... selected %i\n" % iEv)
+
+        # Check for valid option
+        if iEv < 0 or iEv >= len(smDetail):
+            print "\t...Exit"
+            sys.exit()
+
+    return iEv
+
+
 def query_shakemapdetail(evproperties):
+
     """From the event properties for the event, get the URL for the json with
     detailed event data. Download the json and extract the shakemap parts
     """
@@ -153,11 +187,10 @@ def query_shakemapdetail(evproperties):
 
     # Extract only the shakemap detail
     smDetail = detail['properties']['products']['shakemap']
-
     print "\t...%i shakemaps found" % len(smDetail)
 
-    # TODO: If there's more than one shakemap, choose one
-    iSM = 0
+    # If there's more than one shakemap, choose one
+    iSM = choose_shakemap(smDetail)
 
     return smDetail[iSM]
 
@@ -235,13 +268,11 @@ def download_shakemapgrid(searchParams, odir='.'):
     # Choose the event if multiple
     thisEvent = choose_event(evList)
 
-    # Get the event ID
-    eventId = thisEvent['properties']['code']
-
     # Get the shakemap detail for the event
     smDetail = query_shakemapdetail(thisEvent['properties'])
 
-    # Get the shakemap version for record keeping
+    # Get the event Id & shakemap version for record keeping
+    eventId = smDetail['properties']['eventsourcecode']
     version = float(smDetail['properties']['version'])
     print "shakemap_version %.1f" % version
 
