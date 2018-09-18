@@ -5,7 +5,6 @@ import requests
 import json
 import os
 import sys
-from pick import pick
 
 # * Functions ----
 
@@ -114,20 +113,24 @@ def choose_event(evList, maxNchoice=20):
     choices = evList['features'][:maxNchoice]
 
     # Extract a list of event names
-    a_list = [('%s (%s)' % (n['properties']['title'], n['properties']['code']))
-              for n in choices]
-    a_list.append('None: EXIT')
+    print("\nUSER SELECTION OF EVENT:")
+    print("==========================")
+    for idx, n in enumerate(choices):
+        print('%4i: %s (%s)' % (idx,
+                                n['properties']['title'],
+                                n['properties']['code']))
+        print('None: First on list\n  -1: Exit')
 
-    # Ask user to select from the list
-    print "User selection of event..."
-    option, iEv = pick(a_list, 'Choose one', indicator="=>")
+    # Ask user to select from the list, default is first item
+    iEv = int(raw_input("\nChoice: ") or 0)
 
     # If the user selected exit, then exit
-    if iEv == maxNchoice:
+    if iEv < 0 or iEv >= len(choices):
         print "\t...Exit"
         sys.exit()
 
-    print "\t... selected %s" % a_list[iEv]
+    print("\t... selected %s (%s)\n" % (choices[iEv]['properties']['title'],
+                                        choices[iEv]['properties']['code']))
 
     return evList['features'][iEv]
 
@@ -154,7 +157,6 @@ def query_shakemapdetail(evproperties):
     print "\t...%i shakemaps found" % len(smDetail)
 
     # TODO: If there's more than one shakemap, choose one
-    print "Number of shakemaps found: %i" % len(smDetail)
     iSM = 0
 
     return smDetail[iSM]
