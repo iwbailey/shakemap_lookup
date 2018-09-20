@@ -11,7 +11,8 @@ import sys
 
 def search_usgsevents(searchParams,
                       urlEndpt='https://earthquake.usgs.gov/fdsnws/event/1/query',
-                      maxNprint=30):
+                      maxNprint=30,
+                      isQuiet=False):
     """Search the USGS for events satisfying the criteria and return a list of
     events
 
@@ -34,34 +35,41 @@ def search_usgsevents(searchParams,
     if 'limit' not in mySearch:
         mySearch['limit'] = 2e4
     elif mySearch['limit'] > 2e4:
-        print 'WARNING: Based on USGS doc, limit should not be over 20,000'
+        print('WARNING: Based on USGS doc, limit should not be over 20,000')
 
     # Send the query and get the response
-    print "Sending query to get events..."
+    if ~isQuiet:
+        print "Sending query to get events..."
     resp = requests.get(urlEndpt, params=mySearch)
 
     # Parse the json
-    print "Parsing..."
+    if ~isQuiet:
+        print "Parsing..."
     evList = json.loads(resp.content)
 
     # Check for errors
     if evList['metadata']['status'] == 400:
         print('ERROR in catalog search request: %s' %
               (evList['metadata']['error']))
+
+        # TODO: if we are running this in a loop we may not want to exit, just jump to next
         sys.exit()
 
     # Count number of events
     nEv = len(evList['features'])
-    print('\t...%i events returned (limit of %i)' %
-          (nEv, mySearch['limit']))
 
     # List events to terminal
-    for ev in evList['features'][:maxNprint]:
-        prop = ev['properties']
-        print "\t\t", prop['code'], ":", prop['title']
+    if ~isQuiet:
+        print('\t...%i events returned (limit of %i)' %
+              (nEv, mySearch['limit']))
 
-    if nEv > maxNprint:
-        print "\t[Truncated after max print limit of %i exceeded]" % maxNprint
+        for ev in evList['features'][:maxNprint]:
+            prop = ev['properties']
+            print "\t\t", prop['code'], ":", prop['title']
+
+        if nEv > maxNprint:
+            print("\t[Truncated after max print limit of %i exceeded]" %
+                  maxNprint)
 
     # TODO: if we got the same number back as our limit, should do a query on
     # the count
@@ -168,10 +176,11 @@ def choose_shakemap(smDetail):
     return iEv
 
 
-def query_shakemapdetail(evproperties):
-
+def query_shakemapdetail(evproperties, isChoose=True, isQuiet=False):
     """From the event properties for the event, get the URL for the json with
     detailed event data. Download the json and extract the shakemap parts
+
+    TODO: description a
     """
 
     # Get detailed info for top event
@@ -181,16 +190,21 @@ def query_shakemapdetail(evproperties):
     urlEvDetail = evproperties['detail']
 
     # Query the detailed json from the web
-    print "Querying detailed event info for eventId=%s..." % eventId
+    if ~isQuiet:
+        print("Querying detailed event info for eventId=%s..." % eventId)
     resp2 = requests.get(urlEvDetail)
     detail = json.loads(resp2.content)
 
     # Extract only the shakemap detail
     smDetail = detail['properties']['products']['shakemap']
-    print "\t...%i shakemaps found" % len(smDetail)
+    if ~isQuiet:
+        print("\t...%i shakemaps found" % len(smDetail))
 
-    # If there's more than one shakemap, choose one
-    iSM = choose_shakemap(smDetail)
+    if isChoose:
+        # If there's more than one shakemap, choose one
+        iSM = choose_shakemap(smDetail)
+    else:
+        iSM = 0
 
     return smDetail[iSM]
 
@@ -239,14 +253,15 @@ def download_xmlzip(gridURL, ofilename, eventId, version):
     return
 
 
-def download_shakemapgrid(searchParams, odir='.'):
+def download_shakemapgrid(searchParams, odir='.', isQuiet=False):
     """Find an earthquake record on the USGS website and download its shakemap and
     uncertainty grid.
 
     """
     # TODO: Default behavior if search doesn't exist
 
-    print 'Enforcing API search to require producttype=shakemap'
+    if ~isQuiet:
+        print('Enforcing API search to require producttype=shakemap')
     searchParams['producttype'] = 'shakemap'
 
     # TODO: input option should ask if we want the zip file
@@ -255,7 +270,8 @@ def download_shakemapgrid(searchParams, odir='.'):
 
     # Check the output folders exist
     if odir != '' and not os.path.exists(odir):
-        print 'Making output folder %s' % odir
+        if ~isQuiet:
+            print('Making output folder %s' % odir)
         os.makedirs(odir)
 
     # Get list of events
@@ -263,6 +279,7 @@ def download_shakemapgrid(searchParams, odir='.'):
 
     # Exit if nothing found
     if evList['metadata']['count'] == 0:
+        print("Nothing found")
         return
 
     # Choose the event if multiple
