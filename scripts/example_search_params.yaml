@@ -1,0 +1,13 @@
+# Parameters for Hawaiian earthquake
+starttime:  "2018-05-01"
+endtime:  "2018-05-17"
+minmagnitude:  6.8
+maxmagnitude: 10.0
+mindepth: 0.0
+maxdepth: 50.0
+minlongitude: -180.0
+maxlongitude: -97.0
+minlatitude:  0.0
+maxlatitude: 45.0
+limit: 50
+producttype: 'shakemap'

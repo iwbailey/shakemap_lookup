@@ -4,37 +4,18 @@ Search the USGS for an earthquake and download its ShakeMap
 """
 
 # * Libraries ----
-import os
 from numpy import arange
+import argparse
+import yaml
+import sys
+import os
+
 from matplotlib import pyplot as plt
 from matplotlib import pylab
 
 # From this project
 from shakemap_lookup import download_shakemapgrid
 from shakemap_lookup import USGSshakemapGrid
-
-
-# * Parameters -----
-
-# TODO: Migrate these parameters to a text yaml file that is read in by main()
-
-searchParams = {  # Parameters for Hawaiian earthquake
-    'starttime':  "2018-05-01",
-    'endtime':  "2018-05-17",
-    'minmagnitude':  6.8,
-    'maxmagnitude': 10.0,
-    'mindepth': 0.0,
-    'maxdepth': 50.0,
-    'minlongitude': -180.0,
-    'maxlongitude': -97.0,
-    'minlatitude':  0.0,
-    'maxlatitude': 45.0,
-    'limit': 50,
-    'producttype': 'shakemap'}
-
-
-# Where to save the downloaded grid
-outdir = os.path.join(os.path.expanduser('~'), 'Downloads', 'usgs_shakemap')
 
 
 # * Functions -----
@@ -77,11 +58,43 @@ def check_plot(ifile, ifile_unc):
     pylab.show(block=True)
 
 
-def main():
+def main(ifile_dflt='example_search_params.yaml',
+         odir_dflt=os.path.join(os.path.expanduser('~'), 'Downloads',
+                                'usgs_shakemap')):
     """ Script """
 
-    ofilename, ofilename_unc = download_shakemapgrid(searchParams, outdir)
+    # Get the input arguments
+    parser = argparse.ArgumentParser(description='Download a USGS ShakeMap',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+    parser.add_argument('-i', '--ifile',
+                        metavar='search_params.yaml',
+                        type=str,
+                        nargs='?', default=ifile_dflt,
+                        help='.yaml file with the event search parameters')
+
+    parser.add_argument('-o', '--odir',
+                        metavar='path/to/save/output/',
+                        type=str,
+                        nargs='?', default=odir_dflt,
+                        help='Path to store downloaded ShakeMap files')
+
+    args = parser.parse_args()
+
+    # Read the search parameters from the file
+    with open(args.ifile, 'r') as stream:
+        try:
+            # Expect the yaml file to contain fields that go into a dict
+            searchParams = yaml.load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+            sys.exit()
+
+    # Get the shakemaps and save to a file
+    ofilename, ofilename_unc = download_shakemapgrid(searchParams,
+                                                     args.odir)
+
+    # Check what we have downloaded
     check_plot(ofilename, ofilename_unc)
 
     print("DONE")
