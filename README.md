@@ -15,7 +15,7 @@ your downloads folder:
 ```
 cd scripts
 cp example_search_params.yaml search_params.yaml
-python script01\_get\_shakemap.py
+python script01_get_shakemap.py
 ```
 
 This should work as long as you don't access the web via a proxy
