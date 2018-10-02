@@ -280,7 +280,7 @@ def download_shakemapgrid(searchParams, odir='.', isQuiet=False):
     # Exit if nothing found
     if evList['metadata']['count'] == 0:
         print("Nothing found")
-        return
+        return None, None
 
     # Choose the event if multiple
     thisEvent = choose_event(evList)
