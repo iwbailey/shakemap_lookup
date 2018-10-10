@@ -3,6 +3,7 @@ and it's intensity for usgs shakemap
 
 """
 import numpy as np
+import numpy.ma as ma
 from zipfile import ZipFile, is_zipfile
 from xml.etree.ElementTree import parse
 
@@ -58,7 +59,10 @@ def print_rootitems(root):
 
 
 def print_eventinfo(eventInfo):
-    """Get the event parameters """
+    """Get the event parameters
+    IN:
+      eventInfo (dict) which is the attribute of 'event' under the root tree
+    """
     print("Event info:")
     for t, v in eventInfo.items():
         print "\t", t, ":", v
@@ -111,11 +115,46 @@ def read_gridvals(root, ns, intensMeasure, ny, nx):
     return gridVal
 
 
+def check_uncgrid(root2, hdr, namespace, xylims):
+
+    isOk = True
+
+    # Check the event id and version are the same
+    for fnm in ('event_id', 'shakemap_id', 'shakemap_version'):
+        if root2.get(fnm) != hdr[fnm]:
+            print("ERROR: mismatch in %s: %s vs %s" %
+                  (fnm, root2.get(fnm), hdr[fnm]))
+            isOk = False
+
+    # Check the limits and spacing are the same
+    theseLims = read_gridlims(root2, namespace)
+    if abs(np.sum(np.array(theseLims) - xylims)) > 1e-12:
+        print "ERROR: mismatch in grid limits for uncertainty file"
+        print theseLims, "vs", xylims
+        isOk = False
+
+    return isOk
+
+
 # ------------------------------------------------------------------------------
 
 
 class USGSshakemapGrid:
-    """ Class defines a USGS shakemap grid for a single intensity measure """
+    """ Class defines a USGS shakemap grid for a single intensity measure
+
+    Properties
+     hdr: root attributes
+     eventInfo: event attributes
+     x0: lon coordinate of west-most grid cell center
+     x1: lon coordinate of east most grid cell center
+     y0: lat coordinate of south-most grid cell center
+     y1: lat coordinate of north-most grid cell center
+     intensMeasure: string identifier for which intensity measure is stored
+     grid: 2-d numpy array of intensity values
+       latitude (y) is the first dimension, longitude (x) is the 2nd dimension
+       the first value of the grid, ie grid[0,0] is the SW most point
+     grid_std: 2-d numpy array of the standard deviations
+    """
 
     def __init__(self, ifile_xml, intensMeasure, ifile_unc=None,
                  isQuiet=False):
@@ -163,127 +202,143 @@ class USGSshakemapGrid:
         nx, ny = read_griddims(root, namespace)
 
         # Get grid itself, axis=0 is the y/lat axis
-        self.grid = read_gridvals(root, namespace, intensMeasure, ny, nx)
+        self.grid = read_gridvals(root, namespace, intensMeasure, ny,
+                                  nx)
         self.intensMeasure = intensMeasure
 
-        # Get grid spacing
         # Note the precision is worse if we read the grid spacing from the file
-        # Note this might cause a bug crossing the dateline
-        self.dx = (xylims[1] - xylims[0])/(np.size(self.grid, 1) - 1)
-        self.dy = (xylims[3] - xylims[2])/(np.size(self.grid, 0) - 1)
 
         # Add the uncertainty file
-        if ifile_unc is None:
-            # Make a grid for the uncertainty, initially with zero uncertainty
-            self.grid_std = np.zeros(np.shape(self.grid))
-        else:
+        self.grid_std = np.zeros(np.shape(self.grid))
+        if ifile_unc is not None:
             # Add from file
             # Parse the XML
             root2 = read_root(ifile_unc)
 
-            # Check the event id and version are the same
-            for fnm in ('event_id', 'shakemap_id', 'shakemap_version'):
-                if root2.get(fnm) != self.hdr[fnm]:
-                    print("ERROR: mismatch in %s: %s vs %s" %
-                          (fnm, root2.get(fnm), self.hdr[fnm]))
-
-            # Check the limits and spacing are the same
-            theseLims = read_gridlims(root2, namespace)
-            if abs(np.sum(np.array(theseLims) - self.xylims())) > 1e-12:
-                print "ERROR: mismatch in grid limits for uncertainty file"
-                print theseLims, "vs", self.xylims()
-
-            # Import the grid
-            self.grid_std = read_gridvals(root2, namespace,
-                                          'STD'+self.intensMeasure,
-                                          np.size(self.grid, 0),
-                                          np.size(self.grid, 1))
+            if check_uncgrid(root2, self.hdr, namespace, xylims) is True:
+                # Import the grid
+                self.grid_std = read_gridvals(root2, namespace,
+                                              'STD'+self.intensMeasure,
+                                              np.size(self.grid, 0),
+                                              np.size(self.grid, 1))
 
         return
 
+    # Get the grid spacing
+    def dx(self):
+        """Return the grid spacing in the lon direction. Won't work if crossing the
+        date line
+        """
+        return (self.x1 - self.x0)/(self.nx()-1)
+
+    def dy(self):
+        """Return the grid spacing in the lat direction. Won't work if crossing the
+        date line
+        """
+        return (self.y1 - self.y0)/(self.ny()-1)
+
+    # Get the grid dimensions
     def nx(self):
-        """ Return number of grid cells in longitude """
         return np.size(self.grid, axis=1)
 
     def ny(self):
-        """ Return number of grid cells in latitude """
         return np.size(self.grid, axis=0)
 
     # Functions to return the limits of the grid space
-    def xlims(self, isCenters=True):
+    def xlims(self, isCenters=False):
+
         """Return numpy array of [min, max] of x (lon) coordinates.
 
         Keyword arguments:
-        centers : (logical) Return the grid cell centers if True (default).
-                            Return the grid cell edges if False.
+        centers : (logical) Return the grid cell centers if True.
+                            Return the grid cell edges if False (default).
         """
         xlims = np.array((self.x0, self.x1))
 
         if not isCenters:
             # Shift half a grid cell to get the edge
-            xlims = xlims + self.dx*np.array((-0.5, 0.5))
+            xlims = xlims + self.dx()*np.array((-0.5, 0.5))
 
         return xlims
 
-    def ylims(self, isCenters=True):
+    def ylims(self, isCenters=False):
         """Return numpy array of [min, max] of y (lat) coordinates.
 
         Keyword arguments:
-        centers : (logical) Return the grid cell centers if True (default).
-                            Return the grid cell edges if False.
+        centers : (logical) Return the grid cell centers if True.
+                            Return the grid cell edges if False (default).
         """
         ylims = np.array((self.y0, self.y1))
 
-        # Check user input
         if not isCenters:
-            ylims = ylims + self.dy*np.array((-0.5, 0.5))
+            ylims = ylims + self.dy()*np.array((-0.5, 0.5))
 
         return ylims
 
-    def xylims(self, isCenters=True):
+    def xylims(self, isCenters=False):
         """Return numpy array min/max of x(lon) and y (lat) coordinates.
 
         Returns numpy array [Xmin,Xmax,Ymin,yMax]
 
         Keyword arguments:
-        isCenters : (logical) Extent of grid cell centers if True (default).
-                              Full extent grid up to cell edges if False.
+        isCenters : (logical) Extent of grid cell centers if True.
+                    Full extent grid up to cell edges if False (default)
         """
         return np.r_[self.xlims(isCenters), self.ylims(isCenters)]
 
     # Get the coordinates of the grid centers
     def xcoords(self, idx=np.array([])):
+        """Return the x coordinate of the grid cell centers. Specify which indices if
+        only a subset.
+
+        """
         xi = np.linspace(self.x0, self.x1, self.nx())
         if np.size(idx) != 0:
             xi = xi[idx]
+
         return xi
 
     def ycoords(self, idx=np.array([])):
         yi = np.linspace(self.y0, self.y1, self.ny())
         if np.size(idx) != 0:
             yi = yi[idx]
+
         return yi
+
+    def xycoords(self):
+        # TODO: return the x y coordinates of the center of each grid poitn
+        return
+
+    # Get the grid index for specified coordinates
+    def grididx(self, xpts, ypts):
+        # Get the indices of the grid for each point
+        iLon = np.floor(self.nx()*(xpts - self.x0)/(self.x1 - self.x0))
+        iLon = iLon.astype(int)
+
+        iLat = np.floor(self.ny()*(ypts - self.y0)/(self.y1 - self.y0))
+        iLat = iLat.astype(int)
+
+        # Set nan where outside of grid
+        iLat = ma.masked_outside(iLat, 0, self.ny()-1)
+        iLon = ma.masked_outside(iLon, 0, self.nx()-1)
+
+        return iLon, iLat
 
     # Lookup from grid at specified coordinates
     def lookup(self, xpts, ypts):
         """ Find grid intensities at each of the points """
 
         # Get the indices of the grid for each point
-        iLon = ((xpts - self.x0)/self.dx + 0.5).astype(int)
-        iLat = ((ypts - self.y0)/self.dy + 0.5).astype(int)
-
-        # Identify and keep points within bounds
-        isIn = (iLon >= 0) & (iLon < self.nx) & (iLat >= 0) & (iLat <= self.ny)
-        iLon = iLon[isIn]
-        iLat = iLat[isIn]
+        iLon, iLat = self.grididx(xpts, ypts)
 
         # Initialize outputs
         mean = np.empty(xpts.shape)
         std = np.empty(ypts.shape)
 
         # Lookup
-        mean[isIn] = self.grid[iLat, iLon]
-        std[isIn] = self.grid_std[iLat, iLon]
+        isIn = ~iLon.mask & ~iLat.mask
+        mean[isIn] = self.grid[iLat[isIn], iLon[isIn]]
+        std[isIn] = self.grid_std[iLat[isIn], iLon[isIn]]
 
         # Set nan where outside of grid
         mean[~isIn] = np.nan
@@ -303,6 +358,7 @@ class USGSshakemapGrid:
         yi = self.ycoords()
 
         # Find which are within the bounds selected
+        # TODO
         isInx = (((xi+0.5*self.dx) >= xyclip[0]) &
                  ((xi-0.5*self.dx) <= xyclip[1]))
         isIny = (((yi+0.5*self.dy) >= xyclip[2]) &

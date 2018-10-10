@@ -67,12 +67,12 @@ def check_plot(ifile, ifile_unc):
     # Plot the shakemap as colours
     cax = ax[0].imshow(thisSM.grid, aspect='equal', interpolation='none',
                        vmin=2, vmax=10, origin='lower',
-                       extent=(thisSM.x0, thisSM.x1, thisSM.y0, thisSM.y1))
+                       extent=thisSM.xylims(False))
 
     # Plot uncertainty
     cax2 = ax[1].imshow(thisSM.grid_std, aspect='equal', interpolation='none',
                         vmin=0, vmax=1.5, origin='lower',
-                        extent=(thisSM.x0, thisSM.x1, thisSM.y0, thisSM.y1))
+                        extent=thisSM.xylims(False))
 
     # Turn grid on
     for a in ax:
