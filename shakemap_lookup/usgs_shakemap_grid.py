@@ -305,9 +305,14 @@ class USGSshakemapGrid:
 
         return yi
 
-    def xycoords(self):
-        # TODO: return the x y coordinates of the center of each grid poitn
-        return
+    # Return the shakemap in a different format
+    def as_dict(self):
+        """Return the grid coordinates and grid values as a dictionary """
+        return {'lon': np.tile(self.xcoords(), self.ny()),
+                'lat': np.repeat(self.ycoords(), self.nx()),
+                self.intensMeasure: self.grid.flatten(order='C'),
+                ('%s_std' % self.intensMeasure):
+                self.grid_std.flatten(order='C')}
 
     # Get the grid index for specified coordinates
     def grididx(self, xpts, ypts):
@@ -359,10 +364,10 @@ class USGSshakemapGrid:
 
         # Find which are within the bounds selected
         # TODO
-        isInx = (((xi+0.5*self.dx) >= xyclip[0]) &
-                 ((xi-0.5*self.dx) <= xyclip[1]))
-        isIny = (((yi+0.5*self.dy) >= xyclip[2]) &
-                 ((yi-0.5*self.dy) <= xyclip[3]))
+        isInx = (((xi+0.5*self.dx()) >= xyclip[0]) &
+                 ((xi-0.5*self.dx()) <= xyclip[1]))
+        isIny = (((yi+0.5*self.dy()) >= xyclip[2]) &
+                 ((yi-0.5*self.dy()) <= xyclip[3]))
 
         # Find x indices within bounds selected. Note where returns a tuple
         idx1 = np.where(isInx)[0]
