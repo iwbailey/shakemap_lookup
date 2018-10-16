@@ -307,12 +307,13 @@ class USGSshakemapGrid:
 
     # Return the shakemap in a different format
     def as_dict(self):
-        """Return the grid coordinates and grid values as a dictionary """
+        """Return the grid coordinates and grid values as a dictionary
+        output dict field names are 'lon', 'lat', 'median', 'std'
+        """
         return {'lon': np.tile(self.xcoords(), self.ny()),
                 'lat': np.repeat(self.ycoords(), self.nx()),
-                self.intensMeasure: self.grid.flatten(order='C'),
-                ('%s_std' % self.intensMeasure):
-                self.grid_std.flatten(order='C')}
+                'median': self.grid.flatten(order='C'),
+                'std': self.grid_std.flatten(order='C')}
 
     # Get the grid index for specified coordinates
     def grididx(self, xpts, ypts):
