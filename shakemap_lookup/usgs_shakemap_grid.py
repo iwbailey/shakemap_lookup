@@ -24,7 +24,7 @@ def zipparse(ifile):
 
         # Check how many files
         if len(fileList) > 1:
-            print "WARNING: Multiple files in zip. Using first file found"
+            print("WARNING: Multiple files in zip. Using first file found")
 
         # Get the xml file within the zip
         xmlFile = myzip.open(fileList[0], 'r')
@@ -52,9 +52,9 @@ def read_root(ifile):
 
 def print_rootitems(root):
     """ Print the attributes of the shakemap, event ID, version, etc """
-    print "Shakemap key details:"
+    print("Shakemap key details:")
     for t, v in root.items():
-        print "\t", t, ":", v
+        print("\t", t, ":", v)
     return
 
 
@@ -65,7 +65,7 @@ def print_eventinfo(eventInfo):
     """
     print("Event info:")
     for t, v in eventInfo.items():
-        print "\t", t, ":", v
+        print("\t", t, ":", v)
     return
 
 
@@ -129,8 +129,8 @@ def check_uncgrid(root2, hdr, namespace, xylims):
     # Check the limits and spacing are the same
     theseLims = read_gridlims(root2, namespace)
     if abs(np.sum(np.array(theseLims) - xylims)) > 1e-12:
-        print "ERROR: mismatch in grid limits for uncertainty file"
-        print theseLims, "vs", xylims
+        print("ERROR: mismatch in grid limits for uncertainty file")
+        print(theseLims, "vs", xylims)
         isOk = False
 
     return isOk

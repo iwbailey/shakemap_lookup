@@ -39,12 +39,12 @@ def search_usgsevents(searchParams,
 
     # Send the query and get the response
     if ~isQuiet:
-        print "Sending query to get events..."
+        print("Sending query to get events...")
     resp = requests.get(urlEndpt, params=mySearch)
 
     # Parse the json
     if ~isQuiet:
-        print "Parsing..."
+        print("Parsing...")
     evList = json.loads(resp.content)
 
     # Check for errors
@@ -65,7 +65,7 @@ def search_usgsevents(searchParams,
 
         for ev in evList['features'][:maxNprint]:
             prop = ev['properties']
-            print "\t\t", prop['code'], ":", prop['title']
+            print("\t\t", prop['code'], ":", prop['title'])
 
         if nEv > maxNprint:
             print("\t[Truncated after max print limit of %i exceeded]" %
@@ -103,7 +103,7 @@ def count_usgsevents(searchParams,
     # option
 
     # Send the query and get the response
-    print "Sending query to get events..."
+    print("Sending query to get events...")
     resp = requests.get(urlEndpt, params=mySearch)
 
     # TODO check if we received anything back
@@ -134,7 +134,7 @@ def choose_event(evList, maxNchoice=20):
 
     # If the user selected exit, then exit
     if iEv < 0 or iEv >= len(choices):
-        print "\t...Exit"
+        print("\t...Exit")
         sys.exit()
 
     print("\t... selected %s (%s)\n" % (choices[iEv]['properties']['title'],
@@ -170,7 +170,7 @@ def choose_shakemap(smDetail):
 
         # Check for valid option
         if iEv < 0 or iEv >= len(smDetail):
-            print "\t...Exit"
+            print("\t...Exit")
             sys.exit()
 
     return iEv
@@ -232,11 +232,11 @@ def download_xmlzip(gridURL, ofilename, eventId, version):
 
     # Check if file already exists
     if os.path.exists(ofilename):
-        print "File %s exists... skipping download" % ofilename
+        print("File %s exists... skipping download" % ofilename)
         # TODO: user prompt here in case we want to overwrite
         return
 
-    print "Downloading shakemap from %s" % gridURL
+    print("Downloading shakemap from %s" % gridURL)
     resp3 = requests.get(gridURL)
     xmlZip = resp3.content
 
@@ -248,7 +248,7 @@ def download_xmlzip(gridURL, ofilename, eventId, version):
         # Write the downloaded zip straight to file. This overwrites anything
         # there already
         zfile.write(xmlZip)
-        print "Written to %s" % ofilename
+        print("Written to %s" % ofilename)
 
     return
 
@@ -291,7 +291,7 @@ def download_shakemapgrid(searchParams, odir='.', isQuiet=False):
     # Get the event Id & shakemap version for record keeping
     eventId = smDetail['properties']['eventsourcecode']
     version = float(smDetail['properties']['version'])
-    print "shakemap_version %.1f" % version
+    print("shakemap_version %.1f" % version)
 
     # Extract the shakemap grid urls and version from the detail
     gridURL, uncGridURL = get_shakemapgrid_urls(smDetail, filetype='xml.zip')
@@ -333,15 +333,15 @@ def test_searchanddownload():
         'maxlatitude': 45.0,
         'limit': 50,
         'producttype': 'shakemap'}
-    print "Search Parameters:"
-    print searchParams
+    print("Search Parameters:")
+    print(searchParams)
 
     # Store in sub-folder of Downloads
     outdir = os.path.join(os.path.expanduser('~'), 'Downloads',
                           'usgs_shakemap')
 
-    print "\nOutput folder:"
-    print outdir
+    print("\nOutput folder:")
+    print(outdir)
 
     # Run
     download_shakemapgrid(searchParams, outdir)

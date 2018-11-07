@@ -39,7 +39,7 @@ class FragilityCurve:
         """
 
         # Read the whole thing as a pandas data frame from csv
-        print "Reading %s..." % ifile
+        print("Reading %s..." % ifile)
         fragility_in = pd.read_csv(ifile)
 
         # TODO: error checking on fields
