@@ -24,7 +24,7 @@ from shakemap_lookup import FragilityCurve
 
 # Shakemap and uncertainty files
 idir = os.path.join(os.path.expanduser('~'), 'Downloads', 'usgs_shakemap')
-eventid = '1000dyad_v11.0'
+eventid = '70116556_v01.0'
 ifile_sm = os.path.join(idir, ('grid_%s.xml.zip' % eventid))
 ifile_unc = os.path.join(idir, ('uncertainty_%s.xml.zip' % eventid))
 
@@ -102,7 +102,7 @@ def main():
     # Read locations into pandas array
     print("Reading locations from file...")
     locns = Locations(ifile_locns)
-    print "\t...%i locations" % len(locns.df)
+    print("\t...%i locations" % len(locns.df))
 
     # Look up the intensities at the locations
     locns.add_intensities(shakemap)
@@ -136,7 +136,7 @@ def main():
     # Generate check plots
     checkplot_interpolatedamage(frag, locns)
 
-    print "Finished"
+    print("Finished")
 
     return
 

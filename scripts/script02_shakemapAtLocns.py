@@ -17,7 +17,7 @@ from shakemap_lookup import Locations
 
 # Shakemap and uncertainty files
 idir = os.path.join(os.path.expanduser('~'), 'Downloads', 'usgs_shakemap')
-eventid = '1000dyad_v11.0'
+eventid = '70116556_v01.0'
 ifile_sm = os.path.join(idir, ('grid_%s.xml.zip' % eventid))
 ifile_unc = os.path.join(idir, ('uncertainty_%s.xml.zip' % eventid))
 
@@ -42,7 +42,7 @@ def checkplot_inlocns(locns, thisSM):
     ax.plot(locns.df['lon'].values, locns.df['lat'].values, 'xk')
 
     # Plot the ones that got a shakemap intensity
-    inlocns = locns.df[~locns.df[intensMeasure + '_med'].isna()]
+    inlocns = locns.df[locns.df[intensMeasure + '_med'].notnull()]
     plt.plot(inlocns['lon'].values, inlocns['lat'].values, '+r')
 
     # Plot the bounding box of the shakemap
@@ -109,7 +109,7 @@ def main():
 
     # Read locations into pandas array
     locns = Locations(ifile_locns)
-    print "\t...%i locations" % len(locns.df)
+    print("\t...%i locations" % len(locns.df))
 
     # Look up the intensities at the locations
     locns.add_intensities(shakemap)
@@ -124,7 +124,7 @@ def main():
     checkplot_inlocns(locns, shakemap)
     checkplot_shakemaplookup(shakemap, locns)
 
-    print "Finished"
+    print("Finished")
 
     return
 
