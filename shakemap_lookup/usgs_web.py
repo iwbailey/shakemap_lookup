@@ -130,7 +130,7 @@ def choose_event(evList, maxNchoice=20):
         print('None: First on list\n  -1: Exit')
 
     # Ask user to select from the list, default is first item
-    iEv = int(raw_input("\nChoice: ") or 0)
+    iEv = int(input("\nChoice: ") or 0)
 
     # If the user selected exit, then exit
     if iEv < 0 or iEv >= len(choices):
@@ -165,7 +165,7 @@ def choose_shakemap(smDetail):
             # Print the shakemap details
             for prop in ['eventsourcecode', 'version', 'process-timestamp']:
                 print('\t%18s: %s' % (prop, smd['properties'][prop]))
-        iEv = int(raw_input("\nChoice [default 0]: ") or 0)
+        iEv = int(input("\nChoice [default 0]: ") or 0)
         print("\t... selected %i\n" % iEv)
 
         # Check for valid option
