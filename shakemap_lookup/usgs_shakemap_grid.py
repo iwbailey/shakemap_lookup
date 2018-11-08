@@ -6,13 +6,14 @@ import numpy as np
 import numpy.ma as ma
 from zipfile import ZipFile, is_zipfile
 from xml.etree.ElementTree import parse
-
+import sys
 
 # Functions used to read in the ShakeMap grid ---------------------------------
 
 
 def zipparse(ifile):
-    """Parse the xml file into an element tree object when the xml is in a zip file
+    """Parse the xml file into an element tree object when the xml is in a zip
+    file.
 
     """
 
@@ -96,6 +97,16 @@ def read_gridvals(root, ns, intensMeasure, ny, nx):
     t = root.find('shakemap:grid_data', ns).text
 
     # Convert to number
+
+    # TODO: this seems to work better for large numbers
+    # print(len(t))
+    # t = t.split(sep='\n')
+    # print("t",len(t))
+    # t = t.split(sep=' ')
+    # print("t",len(t))
+    # a = np.array(t, dtype=float)
+    # print("a",len(a))
+
     a = np.fromstring(t, sep=' ')
 
     # Get the grid column headers
@@ -188,7 +199,7 @@ class USGSshakemapGrid:
 
         # Display event information
         self.eventInfo = root.find('shakemap:event', namespace).attrib
-        # print_eventinfo(self.eventInfo)
+        #print_eventinfo(self.eventInfo)
 
         # Get grid limits as vector [x0, x1, y0, y1]; these are the coords of
         # the first and last grid centers
