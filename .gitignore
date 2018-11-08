@@ -8,3 +8,4 @@
 /*.egg-info
 scripts/search_params.yaml
 scripts/*.csv
+scripts/search_params_largeEQtest.yaml
