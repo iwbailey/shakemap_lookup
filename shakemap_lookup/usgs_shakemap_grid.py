@@ -96,18 +96,11 @@ def read_gridvals(root, ns, intensMeasure, ny, nx):
     # Get all the gridded data as a text string
     t = root.find('shakemap:grid_data', ns).text
 
-    # Convert to number
-
-    # TODO: this seems to work better for large numbers
-    # print(len(t))
-    # t = t.split(sep='\n')
-    # print("t",len(t))
-    # t = t.split(sep=' ')
-    # print("t",len(t))
-    # a = np.array(t, dtype=float)
-    # print("a",len(a))
-
-    a = np.fromstring(t, sep=' ')
+    # Convert to number. Previously used np.fromstring(), but this
+    # works faster
+    t = t.replace('\n',' ').strip()
+    t = t.split(sep=' ')
+    a = np.array(t, dtype=float)
 
     # Get the grid column headers
     fnms = [None]*nF
@@ -237,14 +230,16 @@ class USGSshakemapGrid:
 
     # Get the grid spacing
     def dx(self):
-        """Return the grid spacing in the lon direction. Won't work if crossing the
-        date line
+        """Return the grid spacing in the lon direction. Won't work if
+        crossing the date line
+
         """
         return (self.x1 - self.x0)/(self.nx()-1)
 
     def dy(self):
-        """Return the grid spacing in the lat direction. Won't work if crossing the
-        date line
+        """Return the grid spacing in the lat direction. Won't work if
+        crossing the date line
+
         """
         return (self.y1 - self.y0)/(self.ny()-1)
 
@@ -299,8 +294,8 @@ class USGSshakemapGrid:
 
     # Get the coordinates of the grid centers
     def xcoords(self, idx=np.array([])):
-        """Return the x coordinate of the grid cell centers. Specify which indices if
-        only a subset.
+        """Return the x coordinate of the grid cell centers. Specify which
+        indices if only a subset.
 
         """
         xi = np.linspace(self.x0, self.x1, self.nx())
@@ -401,7 +396,8 @@ class USGSshakemapGrid:
         return
 
     def cliplowvalues(self, minIntensity):
-        """Clip the grid to remove border where all intensity is lower than a value
+        """Clip the grid to remove border where all intensity is lower than a
+        value
 
         Keyword Arguments:
         minIntensity : (float) the new x/y bounds will include all
