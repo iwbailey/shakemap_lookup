@@ -52,7 +52,8 @@ def search_usgsevents(searchParams,
         print('ERROR in catalog search request: %s' %
               (evList['metadata']['error']))
 
-        # TODO: if we are running this in a loop we may not want to exit, just jump to next
+        # TODO: if we are running this in a loop we may not want to exit, just
+        # jump to next
         sys.exit()
 
     # Count number of events
@@ -209,27 +210,35 @@ def query_shakemapdetail(evproperties, isChoose=True, isQuiet=False):
     return smDetail[iSM]
 
 
-def get_shakemapgrid_urls(smDetail, filetype='xml.zip'):
+def get_shakemapgrid_url(smDetail, grid='grid', filetype='xml.zip'):
     """Get the detailed json, including the webstring for the most recent shakemap,
     for a specified event
 
     """
-    if filetype == 'xml.zip':
-        # Get the URLs for downloading the shakemap grid
 
-        # TODO: add a check to make sure the files we need are
-        # available and fall back to the unzipped version if not
-        gridURL = smDetail['contents']['download/grid.xml.zip']['url']
-#        gridURL = smDetail['contents']['download/grid.xml']['url']
+    # This is what we're looking for in smDetail
+    key = ("download/%s.%s" % (grid, filetype))
+    suffix = filetype
 
-        # ...And the corresponding uncertainty grid
-        uncURL = smDetail['contents']['download/uncertainty.xml.zip']['url']
+    # Check if the desired download exists
+    if key not in smDetail['contents']:
+        print('WARNING: %s doesn''t exist' % key)
 
-    elif filetype == 'xml':
-        gridURL = smDetail['contents']['download/grid.xml']['url']
-        uncURL = smDetail['contents']['download/uncertainty.xml']['url']
+        # Define a backup option
+        suffix = 'xml'
+        if filetype == 'xml':
+            suffix = 'xml.zip'
 
-    return gridURL, uncURL
+        key = ("download/%s.%s" % (grid, suffix))
+
+        if key not in smDetail['contents']:
+            print('ERROR: %s also doesn''t exist' % key)
+            sys.exit()
+
+    # Get the URLs for downloading the shakemap grid
+    gridURL = smDetail['contents'][key]['url']
+
+    return gridURL, suffix
 
 
 def download_xmlzip(gridURL, ofilename, eventId, version):
@@ -312,17 +321,23 @@ def download_shakemapgrid(searchParams, odir='.', isQuiet=False,
     print("shakemap_version %.1f" % version)
 
     # Extract the shakemap grid urls and version from the detail
-    gridURL, uncGridURL = get_shakemapgrid_urls(smDetail, filetype=filetype)
+    gridURL, grdsuffix = get_shakemapgrid_url(smDetail, 'grid',
+                                              filetype=filetype)
 
-    # Define the filenames
+    # Define the filename
     ofilename = os.path.join(odir, ('%s_%s_v%04.1f.%s' %
-                                    ('grid', eventId, version, filetype)))
-    ofilename_unc = os.path.join(odir, ('%s_%s_v%04.1f.%s' %
-                                        ('uncertainty', eventId, version,
-                                         filetype)))
+                                    ('grid', eventId, version, grdsuffix)))
 
     # Download and write to file
     download_xmlzip(gridURL, ofilename, eventId, version)
+
+    # Repeat for uncertainty grid
+    uncGridURL, uncSuffix = get_shakemapgrid_url(smDetail, 'uncertainty',
+                                                 filetype=filetype)
+
+    ofilename_unc = os.path.join(odir, ('%s_%s_v%04.1f.%s' %
+                                        ('uncertainty', eventId, version,
+                                         uncSuffix)))
 
     # Write the uncertainty grid to file
     download_xmlzip(uncGridURL, ofilename_unc, eventId, version)
