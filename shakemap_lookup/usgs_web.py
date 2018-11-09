@@ -127,7 +127,7 @@ def choose_event(evList, maxNchoice=20):
         print('%4i: %s (%s)' % (idx,
                                 n['properties']['title'],
                                 n['properties']['code']))
-        print('None: First on list\n  -1: Exit')
+    print('None: First on list\n  -1: Exit')
 
     # Ask user to select from the list, default is first item
     iEv = int(input("\nChoice: ") or 0)
@@ -216,10 +216,15 @@ def get_shakemapgrid_urls(smDetail, filetype='xml.zip'):
     """
     if filetype == 'xml.zip':
         # Get the URLs for downloading the shakemap grid
+
+        # TODO: add a check to make sure the files we need are
+        # available and fall back to the unzipped version if not
         gridURL = smDetail['contents']['download/grid.xml.zip']['url']
+#        gridURL = smDetail['contents']['download/grid.xml']['url']
 
         # ...And the corresponding uncertainty grid
         uncURL = smDetail['contents']['download/uncertainty.xml.zip']['url']
+
     elif filetype == 'xml':
         gridURL = smDetail['contents']['download/grid.xml']['url']
         uncURL = smDetail['contents']['download/uncertainty.xml']['url']
@@ -253,9 +258,22 @@ def download_xmlzip(gridURL, ofilename, eventId, version):
     return
 
 
-def download_shakemapgrid(searchParams, odir='.', isQuiet=False):
-    """Find an earthquake record on the USGS website and download its shakemap and
-    uncertainty grid.
+def download_shakemapgrid(searchParams, odir='.', isQuiet=False,
+                          filetype='xml.zip'):
+    """Find an earthquake record on the USGS website and download its
+    shakemap and uncertainty grid.
+
+    ARGS:
+
+    searchParams: dict containing search parameters for the USGS
+    web query. See usgs for details
+
+    odir (str): folder to store the downloaded grids. Default ./
+
+    isQuiet (bool): flag to display user messages. Default False
+
+    filetype (str): suffix for the filetype to download. Options are
+    xml.zip or xml. Default 'xml.zip'
 
     """
     # TODO: Default behavior if search doesn't exist
@@ -294,13 +312,14 @@ def download_shakemapgrid(searchParams, odir='.', isQuiet=False):
     print("shakemap_version %.1f" % version)
 
     # Extract the shakemap grid urls and version from the detail
-    gridURL, uncGridURL = get_shakemapgrid_urls(smDetail, filetype='xml.zip')
+    gridURL, uncGridURL = get_shakemapgrid_urls(smDetail, filetype=filetype)
 
     # Define the filenames
-    ofilename = os.path.join(odir, ('%s_%s_v%04.1f.xml.zip' %
-                                    ('grid', eventId, version)))
-    ofilename_unc = os.path.join(odir, ('%s_%s_v%04.1f.xml.zip' %
-                                        ('uncertainty', eventId, version)))
+    ofilename = os.path.join(odir, ('%s_%s_v%04.1f.%s' %
+                                    ('grid', eventId, version, filetype)))
+    ofilename_unc = os.path.join(odir, ('%s_%s_v%04.1f.%s' %
+                                        ('uncertainty', eventId, version,
+                                         filetype)))
 
     # Download and write to file
     download_xmlzip(gridURL, ofilename, eventId, version)
