@@ -10,7 +10,7 @@ with open("README.md", "r") as fh:
 # All details
 setuptools.setup(
     name='shakemap_lookup',
-    version='0.0.1',
+    version='0.1.0',
     url='',
     author='Iain Bailey',
     author_email='iainbailey@gmail.com',
@@ -19,7 +19,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     classifiers=(
-        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT ",
         "Operating System :: OS Independent",
     ),
