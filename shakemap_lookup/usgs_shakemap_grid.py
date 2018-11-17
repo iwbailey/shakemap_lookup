@@ -6,7 +6,7 @@ import numpy as np
 import numpy.ma as ma
 from zipfile import ZipFile, is_zipfile
 from xml.etree.ElementTree import parse
-import sys
+# import sys
 
 # Functions used to read in the ShakeMap grid ---------------------------------
 
@@ -192,7 +192,7 @@ class USGSshakemapGrid:
 
         # Display event information
         self.eventInfo = root.find('shakemap:event', namespace).attrib
-        #print_eventinfo(self.eventInfo)
+        # print_eventinfo(self.eventInfo)
 
         # Get grid limits as vector [x0, x1, y0, y1]; these are the coords of
         # the first and last grid centers
@@ -318,8 +318,8 @@ class USGSshakemapGrid:
         """
         return {'lon': np.tile(self.xcoords(), self.ny()),
                 'lat': np.repeat(self.ycoords(), self.nx()),
-                'median': self.grid.flatten(order='C'),
-                'std': self.grid_std.flatten(order='C')}
+                'm0': self.grid.flatten(order='C'),
+                'sd': self.grid_std.flatten(order='C')}
 
     # Get the grid index for specified coordinates
     def grididx(self, xpts, ypts):
