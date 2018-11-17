@@ -3,7 +3,6 @@
 
 # Libraries ------------------------------------------------------------------
 import os
-import numpy as np
 import pandas as pd
 
 from shakemap_lookup import USGSshakemapGrid
@@ -16,9 +15,6 @@ ifile_sm = os.path.join(idir, ('grid_%s.xml.zip' % eventid))
 ifile_unc = os.path.join(idir, ('uncertainty_%s.xml.zip' % eventid))
 
 
-# Functions -------------------------------------------------------------------
-
-
 # Script ----------------------------------------------------------------------
 
 
@@ -27,10 +23,10 @@ thisSM = USGSshakemapGrid(ifile_sm, 'MMI', ifile_unc=ifile_unc)
 
 # Export as datatable
 sm = pd.DataFrame.from_dict(thisSM.as_dict())
-print "Event info:\n", thisSM.eventInfo
+print("Event info:\n", thisSM.eventInfo)
 
 # Display
-print sm[(sm['lon'] < -158.849) & (sm['lat'] == 22)]
+print(sm[(sm['lon'] < -158.849) & (sm['lat'] == 22)])
 
 # Check grid dimensions consistent with header
 print("\nFrom input xml file:")
@@ -39,7 +35,7 @@ os.system(('zcat %s | gawk \'{if(substr($0,0,1)!="<")print($0)}\' | head' %
 print('...')
 
 # Display
-print sm[(sm['lon'] > -154.651) & (sm['lat'] == 18.5)]
+print(sm[(sm['lon'] > -154.651) & (sm['lat'] == 18.5)])
 
 print("\nFrom input xml file:")
 os.system(('zcat %s | gawk \'{if(substr($0,0,1)!="<")print($0)}\' | tail' %
