@@ -34,13 +34,16 @@ class FragilityCurve:
 
     """
 
-    def __init__(self, ifile):
+    def __init__(self, fragility_in):
         """Constructor for fragility curve
+        Input can be a pandas dataframe or an input file
         """
 
-        # Read the whole thing as a pandas data frame from csv
-        print("Reading %s..." % ifile)
-        fragility_in = pd.read_csv(ifile)
+        if(type(fragility_in) is str):
+            # Read the whole thing as a pandas data frame from csv
+            ifile = fragility_in
+            print("Reading %s..." % ifile)
+            fragility_in = pd.read_csv(ifile)
 
         # TODO: error checking on fields
 
