@@ -12,6 +12,7 @@ Saves results
 """
 # Libraries ------------------------------------------------------------------
 import os
+import yaml
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import pylab
@@ -22,26 +23,8 @@ from shakemap_lookup import FragilityCurve
 
 # Parameters ------------------------------------------------------------------
 
-# Shakemap and uncertainty files
-idir = os.path.join(os.path.expanduser('~'), 'Downloads', 'usgs_shakemap')
-eventid = '70116556_v01.0'
-ifile_sm = os.path.join(idir, ('grid_%s.xml.zip' % eventid))
-ifile_unc = os.path.join(idir, ('uncertainty_%s.xml.zip' % eventid))
+ifile_params = "lookup_params.yaml"
 
-# Which intensity measure to use
-intensMeasure = 'MMI'
-
-# File containing locations
-ifile_locns = '../inputs/Hawaii_Mile_Markers_v2.csv'
-
-# File containing fragility curve
-ifile_frag = '../inputs/my_fragility.csv'
-
-# Output file name
-ofile_locns = "Hawaii_lookup_results_withdamage.csv"
-
-# Flag to keep only those with some damage prob
-isKeepOnlyDamaged = True
 
 # Inline functions ------------------------------------------------------------
 
@@ -95,13 +78,33 @@ def main():
 
     """
 
+    # Read the parameters from the file
+    with open(ifile_params, 'r') as stream:
+        try:
+            # Expect the yaml file to contain fields that go into a dict
+            lookupParams = yaml.load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+            sys.exit()
+
+    # Shakemap and uncertainty files
+    ifile_sm = os.path.join(lookupParams['idir'],
+                            ('grid_%s.xml.zip' %
+                             lookupParams['eventid']))
+    ifile_unc = os.path.join(lookupParams['idir'],
+                             ('uncertainty_%s.xml.zip' %
+                              lookupParams['eventid']))
+
+    # Which intensity measure to use
+    intensMeasure = lookupParams['intensMeasure']
+
     # Read Shakemap into class object
     print("Reading shakemap from file...")
     shakemap = USGSshakemapGrid(ifile_sm, intensMeasure, ifile_unc)
 
     # Read locations into pandas array
     print("Reading locations from file...")
-    locns = Locations(ifile_locns)
+    locns = Locations(lookupParams['ifile_locns'])
     print("\t...%i locations" % len(locns.df))
 
     # Look up the intensities at the locations
@@ -116,7 +119,7 @@ def main():
 
     # Read fragility file into class object
     print("Reading fragility curves from file...")
-    frag = FragilityCurve(ifile_frag)
+    frag = FragilityCurve(lookupParams['ifile_frag'])
 
     # Convert intensities to probability of damage at each state
     print("Getting damage at locations...")
@@ -125,13 +128,13 @@ def main():
     print(frag.mindamagestate())
     print("\t...%i locations with a chance of damage" %
           sum(locns.df['prob_' + frag.mindamagestate()] > 0.0))
-    if(isKeepOnlyDamaged):
+    if(lookupParams['isKeepOnlyDamaged']):
         print("\t...Keeping only locations with chance of damage")
         locns.df = locns.df[locns.df['prob_' + frag.mindamagestate()] > 0.0]
 
     # Write the output file
-    locns.df.to_csv(ofile_locns, index=False)
-    print("Written location details to %s" % ofile_locns)
+    locns.df.to_csv(lookupParams['ofile_locns'], index=False)
+    print("Written location details to %s" % lookupParams['ofile_locns'])
 
     # Generate check plots
     checkplot_interpolatedamage(frag, locns)
