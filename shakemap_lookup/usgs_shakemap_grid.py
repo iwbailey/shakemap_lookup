@@ -7,6 +7,7 @@ import numpy.ma as ma
 from zipfile import ZipFile, is_zipfile
 from xml.etree.ElementTree import parse
 # import sys
+import pdb
 
 # Functions used to read in the ShakeMap grid ---------------------------------
 
@@ -98,7 +99,7 @@ def read_gridvals(root, ns, intensMeasure, ny, nx):
 
     # Convert to number. Previously used np.fromstring(), but this
     # works faster
-    t = t.replace('\n',' ').strip()
+    t = t.replace('\n', ' ').strip()
     t = t.split(sep=' ')
     a = np.array(t, dtype=float)
 
@@ -109,7 +110,11 @@ def read_gridvals(root, ns, intensMeasure, ny, nx):
         fnms[i] = f.get('name')
 
     # work out which column stores our intensity measure
-    iCol = fnms.index(intensMeasure)
+    if intensMeasure in fnms:
+        iCol = fnms.index(intensMeasure)
+    else:
+        print("Valid fieldnames:\n", fnms)
+        raise ValueError('\'%s\' is not in list' % intensMeasure)
 
     # TODO: check if intensity measure wasn't there
 
@@ -161,7 +166,7 @@ class USGSshakemapGrid:
     """
 
     def __init__(self, ifile_xml, intensMeasure, ifile_unc=None,
-                 isQuiet=False):
+                 isQuiet=False, ignoreSVEL600=False):
         """Initiate the class based on the grid.xml file.
 
         Focus on one specific intensity measure.
@@ -203,14 +208,21 @@ class USGSshakemapGrid:
         self.y1 = xylims[3]
 
         # Get grid dimensions, x is lon, y is lat
+        # Note the precision is worse if we read the grid spacing from the file
         nx, ny = read_griddims(root, namespace)
 
         # Get grid itself, axis=0 is the y/lat axis
-        self.grid = read_gridvals(root, namespace, intensMeasure, ny,
-                                  nx)
+        self.grid = read_gridvals(root, namespace, intensMeasure, ny, nx)
         self.intensMeasure = intensMeasure
 
-        # Note the precision is worse if we read the grid spacing from the file
+        # Check if we want to remove points in the sea
+        if ignoreSVEL600:
+            t = read_gridvals(root, namespace, 'SVEL', ny, nx)
+            t[t == 600] = np.nan
+            t[~np.isnan(t)] = 1.0
+            self.grid = self.grid*t
+        else:
+            t = np.ones(self.grid.shape)
 
         # Add the uncertainty file
         self.grid_std = np.zeros(np.shape(self.grid))
@@ -225,6 +237,7 @@ class USGSshakemapGrid:
                                               'STD'+self.intensMeasure,
                                               np.size(self.grid, 0),
                                               np.size(self.grid, 1))
+                self.grid_std = self.grid_std*t
 
         return
 
