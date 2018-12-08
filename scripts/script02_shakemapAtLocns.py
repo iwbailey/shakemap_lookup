@@ -5,6 +5,8 @@ looks up the hazard values at those locations and saves results
 """
 # Libraries ------------------------------------------------------------------
 import os
+import yaml
+import sys
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import pylab
@@ -14,26 +16,12 @@ from shakemap_lookup import Locations
 
 
 # Parameters ------------------------------------------------------------------
-
-# Shakemap and uncertainty files
-idir = os.path.join(os.path.expanduser('~'), 'Downloads', 'usgs_shakemap')
-eventid = '70116556_v01.0'
-ifile_sm = os.path.join(idir, ('grid_%s.xml.zip' % eventid))
-ifile_unc = os.path.join(idir, ('uncertainty_%s.xml.zip' % eventid))
-
-# Which intensity measure to use
-intensMeasure = 'MMI'
-
-# File containing locations
-ifile_locns = '../inputs/Hawaii_Mile_Markers_v2.csv'
-
-# Output file name
-ofile_locns = "Hawaii_lookup_results.csv"
+ifile_params = "lookup_params.yaml"
 
 
 # Inline functions ------------------------------------------------------------
 
-def checkplot_inlocns(locns, thisSM):
+def checkplot_inlocns(locns, thisSM, intensMeasure):
     """Plot the locations and highlight the ones that are in the bounds"""
     print("Generating plot...")
     fig, ax = plt.subplots(1, 1, facecolor='white')
@@ -103,12 +91,35 @@ def main():
 
     """
 
+    # Read the parameters from the file
+    with open(ifile_params, 'r') as stream:
+        try:
+            # Expect the yaml file to contain fields that go into a dict
+            lookupParams = yaml.load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+            sys.exit()
+
+    # Name of the shakemap file
+    ifile_sm = os.path.join(lookupParams['idir'],
+                            ('grid_%s.xml.zip' %
+                             lookupParams['eventid']))
+
+    # Which intensity measure to get
+    intensMeasure = lookupParams['intensMeasure']
+
     # Read Shakemap into class object
     print("Reading shakemap from file...")
-    shakemap = USGSshakemapGrid(ifile_sm, intensMeasure, ifile_unc)
+    if lookupParams['includeUncertainty'] is True:
+        ifile_unc = os.path.join(lookupParams['idir'],
+                                 ('uncertainty_%s.xml.zip' %
+                                  lookupParams['eventid']))
+        shakemap = USGSshakemapGrid(ifile_sm, intensMeasure, ifile_unc)
+    else:
+        shakemap = USGSshakemapGrid(ifile_sm, intensMeasure)
 
     # Read locations into pandas array
-    locns = Locations(ifile_locns)
+    locns = Locations(lookupParams['ifile_locns'])
     print("\t...%i locations" % len(locns.df))
 
     # Look up the intensities at the locations
@@ -117,11 +128,12 @@ def main():
           locns.df[intensMeasure + '_med'].count())
 
     # Write the output file
-    locns.df.to_csv(ofile_locns, index=False)
-    print("Written location details to %s" % ofile_locns)
+    locns.df.to_csv(lookupParams['ofile_locns'], index=False)
+    print("Written location details to %s" %
+          lookupParams['ofile_locns'])
 
     # Generate check plots
-    checkplot_inlocns(locns, shakemap)
+    checkplot_inlocns(locns, shakemap, intensMeasure)
     checkplot_shakemaplookup(shakemap, locns)
 
     print("Finished")
