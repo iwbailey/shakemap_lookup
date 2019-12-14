@@ -6,6 +6,19 @@
 
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
+
+# Pycharm related
+.idea/
+
+# virtual env
+venv
+venv/
+.venv/
+
+# Jupyter notebook
+notebook/ipynb_checkpoints/
+
+# User specific/config files
 scripts/search_params.yaml
 scripts/*.csv
 scripts/search_params_largeEQtest.yaml
