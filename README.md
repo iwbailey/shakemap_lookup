@@ -18,7 +18,21 @@ cp example_search_params.yaml search_params.yaml
 python script01_get_shakemap.py
 ```
 
-This should work as long as you don't access the web via a proxy
+Running the script should do the following:
+
+1. Search for an earthquake on the USGS server according to the parameters in the `search_params.yaml` file.
+2. Prompt you to check which of the candidate earthquakes you want.
+3. Search for any ShakeMaps associated with the selected earthquake.
+4. Prompt you to check which Shakemap you want to download.
+5. Download the intensity grid and associated uncertainty grid in xml.zip format.
+
+You might have issues if accessing the web via proxy.
+
+## Resources
+For the lat lon search parameters, the following has a list of bounding box per
+country (with some issues highlighted in the comments below).
+
+[https://gist.github.com/graydon/11198540](https://gist.github.com/graydon/11198540)
 
 ## Backlog
 
