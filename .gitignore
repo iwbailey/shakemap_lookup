@@ -16,7 +16,7 @@ venv/
 .venv/
 
 # Jupyter notebook
-notebook/ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
 
 # User specific/config files
 scripts/search_params.yaml
