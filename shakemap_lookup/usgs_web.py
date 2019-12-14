@@ -38,12 +38,17 @@ def search_usgsevents(searchParams,
         print('WARNING: Based on USGS doc, limit should not be over 20,000')
 
     # Send the query and get the response
-    if ~isQuiet:
+    if isQuiet is False:
         print("Sending query to get events...")
-    resp = requests.get(urlEndpt, params=mySearch)
+
+    try:
+        resp = requests.get(urlEndpt, params=mySearch)
+    except requests.exceptions.RequestException as e:
+        print(e)
+        sys.exit(1)
 
     # Parse the json
-    if ~isQuiet:
+    if isQuiet is False:
         print("Parsing...")
     evList = json.loads(resp.content)
 
@@ -60,7 +65,7 @@ def search_usgsevents(searchParams,
     nEv = len(evList['features'])
 
     # List events to terminal
-    if ~isQuiet:
+    if isQuiet is False:
         print('\t...%i events returned (limit of %i)' %
               (nEv, mySearch['limit']))
 
