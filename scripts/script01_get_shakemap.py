@@ -92,10 +92,8 @@ def check_plot(ifile, ifile_unc):
     pylab.show(block=True)
 
 
-def main():
+def main(args=get_args()):
     """ Script """
-
-    args = get_args()
 
     # Set the proxy for all traffic
     if args.proxy is not None:
@@ -114,8 +112,7 @@ def main():
             sys.exit()
 
     # Get the shakemaps and save to a file
-    ofilename, ofilename_unc = download_shakemapgrid(searchParams,
-                                                     args.odir)
+    ofilename, ofilename_unc = download_shakemapgrid(searchParams, args.odir)
 
     if ofilename is None:
         sys.exit()
