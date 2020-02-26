@@ -4,19 +4,13 @@ Search the USGS for an earthquake and download its ShakeMap
 """
 
 # * Libraries ----
-from numpy import arange
 import argparse as ap
 import yaml
 import sys
 import os
 
-from matplotlib import pyplot as plt
-from matplotlib import pylab
-
 # From this project
 from shakemap_lookup import download_shakemapgrid
-from shakemap_lookup import USGSshakemapGrid
-
 
 # * Functions -----
 
@@ -55,43 +49,6 @@ def get_args():
     return args
 
 
-def check_plot(ifile, ifile_unc):
-    """ Plot the shakemap and uncertainty grid that were downloaded"""
-
-    print('Reading the shakemap from file with MMI...')
-    thisSM = USGSshakemapGrid(ifile, 'MMI', ifile_unc=ifile_unc)
-
-    print("Generating plot...")
-    fig, ax = plt.subplots(1, 2, facecolor='white')
-
-    # Plot the shakemap as colours
-    cax = ax[0].imshow(thisSM.grid, aspect='equal', interpolation='none',
-                       vmin=2, vmax=10, origin='lower',
-                       extent=thisSM.xylims(False))
-
-    # Plot uncertainty
-    cax2 = ax[1].imshow(thisSM.grid_std, aspect='equal', interpolation='none',
-                        vmin=0, vmax=1.5, origin='lower',
-                        extent=thisSM.xylims(False))
-
-    # Turn grid on
-    for a in ax:
-        a.grid()
-
-    # Add a colorbar
-    plt.colorbar(cax, ax=ax[0], orientation='horizontal',
-                 ticks=range(0, 10, 1),
-                 label=thisSM.intensMeasure)
-    plt.colorbar(cax2, ax=ax[1], orientation='horizontal',
-                 ticks=arange(0, 1.5, 0.25),
-                 label=('Std(%s)' % thisSM.intensMeasure))
-
-    print('Pausing while plot is shown...')
-
-    # Show the plot
-    pylab.show(block=True)
-
-
 def main(args=get_args()):
     """ Script """
 
@@ -106,7 +63,7 @@ def main(args=get_args()):
     with open(args.ifile, 'r') as stream:
         try:
             # Expect the yaml file to contain fields that go into a dict
-            searchParams = yaml.load(stream)
+            searchParams = yaml.load(stream, Loader=yaml.Loader)
         except yaml.YAMLError as exc:
             print(exc)
             sys.exit()
@@ -116,9 +73,6 @@ def main(args=get_args()):
 
     if ofilename is None:
         sys.exit()
-
-    # Check what we have downloaded
-    check_plot(ofilename, ofilename_unc)
 
     print("DONE")
 
