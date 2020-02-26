@@ -1,18 +1,14 @@
 """
-Search the USGS for an earthquake and download its ShakeMap
+Search the USGS for an earthquake and interactively choose the ShakeMap to download.
 
 """
-
-# * Libraries ----
 import argparse as ap
 import yaml
 import sys
 import os
 
 # From this project
-from shakemap_lookup import download_shakemapgrid
-
-# * Functions -----
+from shakemap_utils import download_shakemapgrid
 
 
 def get_args():
