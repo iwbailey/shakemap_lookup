@@ -17,9 +17,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import pylab
 
-from shakemap_lookup import USGSshakemapGrid
-from shakemap_lookup import Locations
-from shakemap_lookup import FragilityCurve
+from shakemap_utils import USGSshakemapGrid
+from shakemap_utils import Locations
+from shakemap_utils import FragilityCurve
 
 # Parameters ------------------------------------------------------------------
 

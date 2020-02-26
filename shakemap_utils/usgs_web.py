@@ -169,8 +169,11 @@ def choose_shakemap(smDetail):
             print("Option %i:" % idx)
 
             # Print the shakemap details
-            for prop in ['eventsourcecode', 'version', 'process-timestamp']:
-                print('\t%18s: %s' % (prop, smd['properties'][prop]))
+            print('\t%18s: %s' % ('id', smd['id']))
+            for prop in ['event-description', 'eventsourcecode', 'version',
+                         'process-timestamp']:
+                if prop in smd['properties'].keys():
+                    print('\t%18s: %s' % (prop, smd['properties'][prop]))
         iEv = int(input("\nChoice [default 0]: ") or 0)
         print("\t... selected %i\n" % iEv)
 
