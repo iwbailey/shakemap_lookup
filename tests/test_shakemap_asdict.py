@@ -5,7 +5,7 @@
 import os
 import pandas as pd
 
-from shakemap_lookup import USGSshakemapGrid
+from shakemap_utils import USGSshakemapGrid
 
 
 # Parameters ------------------------------------------------------------------

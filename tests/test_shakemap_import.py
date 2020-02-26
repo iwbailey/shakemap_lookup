@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import pylab
 
-from shakemap_lookup import USGSshakemapGrid
+from shakemap_utils import USGSshakemapGrid
 
 
 # Parameters ------------------------------------------------------------------
