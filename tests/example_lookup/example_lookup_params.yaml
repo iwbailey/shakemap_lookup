@@ -1,6 +1,6 @@
 
 # Folder where the shakemaps have been downloaded
-idir : "C:/Users/username/Downloads/usgs_shakemap"
+idir : "../example_download"
 
 # EventId and version for identifying the file name
 eventid : "70116556_v01.0"

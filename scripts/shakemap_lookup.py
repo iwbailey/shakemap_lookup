@@ -85,10 +85,7 @@ def checkplot_shakemaplookup(thisSM, locns, clims=(2.0, 10.0), dc=1.0):
 
 
 def main():
-
-    """
-    MAIN SCRIPT:
-
+    """Main script
     """
 
     # Read the parameters from the file
