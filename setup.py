@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 
 # All details
 setuptools.setup(
-    name='shakemap_lookup',
+    name='shakemap_utils',
     version='0.1.0',
     url='',
     author='Iain Bailey',
@@ -17,6 +17,8 @@ setuptools.setup(
     description='Lookup USGS shakemap values at specified locations',
     long_description=long_description,
     long_description_content_type="text/markdown",
+    scripts=['scripts/find_and_download_shakemap.py',
+             'scripts/shakemap_lookup.py'],
     packages=setuptools.find_packages(),
     classifiers=(
         "Programming Language :: Python :: 3",
