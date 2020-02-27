@@ -48,13 +48,13 @@ class FragilityCurve:
         # TODO: error checking on fields
 
         # First column is the intensity measure
-        self.intensitymeasure = fragility_in.columns[0]
+        self.intensity_measure = fragility_in.columns[0]
 
         # Sort from smallest to largest intensity
-        fragility_in = fragility_in.sort_values(self.intensitymeasure)
+        fragility_in = fragility_in.sort_values(self.intensity_measure)
 
         # Keep intensities in a separate array
-        self.intensities = fragility_in[self.intensitymeasure].values
+        self.intensities = fragility_in[self.intensity_measure].values
 
         # Second/third columns are the damage states
         self.exceedprob = fragility_in.iloc[:, 1:]
