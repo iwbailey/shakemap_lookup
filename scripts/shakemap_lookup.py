@@ -26,14 +26,19 @@ def get_args():
                         nargs='?',
                         help='ShakeMap grid stored in xml or xml.zip format')
 
+    parser.add_argument('-u', '--shakemap_unc',
+                        metavar='shakemap_unc_grid.xml',
+                        type=str,
+                        nargs='?',
+                        default=None,
+                        help='ShakeMap uncertainty grid stored in xml or xml.zip format')
+
     parser.add_argument('--intensity_measure',
                         metavar='code',
                         type=str,
                         nargs='?',
                         default='MMI',
                         help='Which intensity measure to lookup')
-
-    #parser.add_argument('-u')
 
     parser.add_argument('-o', '--ofile',
                         metavar='lookup_results.csv',
@@ -52,14 +57,10 @@ def main(args=get_args()):
 
     # Read Shakemap into class object
     print("Reading shakemap from file...")
-    # if lookupParams['includeUncertainty'] is True:
-    #     ifile_unc = os.path.join(lookupParams['idir'],
-    #                              ('uncertainty_%s.xml.zip' %
-    #                               lookupParams['eventid']))
-    #     shakemap = USGSshakemapGrid(args.shakemap, args.intensity_measure, ifile_unc)
-    # else:
-    #
-    shakemap = USGSshakemapGrid(args.shakemap, args.intensity_measure)
+    if args.shakemap_unc is not None:
+        shakemap = USGSshakemapGrid(args.shakemap, args.intensity_measure, args.shakemap_unc)
+    else:
+        shakemap = USGSshakemapGrid(args.shakemap, args.intensity_measure)
 
     # Read locations into pandas array
     locns = pd.read_csv(args.ifile)
