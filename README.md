@@ -27,14 +27,25 @@ Running the script should do the following:
 
 You might have issues if accessing the web via proxy.
 
-### Shakemap lookup
+### ShakeMap lookup
 To lookup the shakemap intensity from a downloaded shakemap for a set of coordinates
 
 ```
 cd tests/example_lookup
-shakemap_lookup.py -i Hawaii_Mile_Markers_v2.csv -s ../example_download/grid_70116556_v01.0.xml --intensity_measure 'MMI'
+shakemap_lookup.py -i Hawaii_Mile_Markers_v2.csv --intensity_measure 'MMI' \
+    -s ../example_download/grid_70116556_v01.0.xml \
+    -u ../example_download/uncertainty_70116556_v01.0.xml
 ```
 
+### ShakeMap damage estimate
+Look up shakemap at a set of coordinates and combine with a fragility function to estimate the 
+probability of damage at each location.
+```
+cd tests/example_damage_est
+shakemap_estimate_damage.py -i Hawaii_Mile_Markers_v2.csv --fragility_file 'my_fragility.csv' \
+    -s ../example_download/grid_70116556_v01.0.xml \
+    -u ../example_download/uncertainty_70116556_v01.0.xml
+``` 
 
 ## Resources
 For the lat lon search parameters, the following has a list of bounding box per

@@ -18,7 +18,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     scripts=['scripts/find_and_download_shakemap.py',
-             'scripts/shakemap_lookup.py'],
+             'scripts/shakemap_lookup.py',
+             'scripts/shakemap_estimate_damage.py'],
     packages=setuptools.find_packages(),
     classifiers=(
         "Programming Language :: Python :: 3",
