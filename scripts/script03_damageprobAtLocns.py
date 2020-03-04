@@ -12,15 +12,9 @@ Saves results
 """
 import argparse as ap
 import pandas as pd
-
-import os
-import yaml
 import numpy as np
-from matplotlib import pyplot as plt
-from matplotlib import pylab
 
 from shakemap_utils import USGSshakemapGrid
-from shakemap_utils import Locations
 from shakemap_utils import FragilityCurve
 
 
@@ -51,7 +45,7 @@ def get_args():
 
     parser.add_argument('--fragility_file',
                         metavar='fragility.csv',
-                        type='str',
+                        type=str,
                         nargs='?',
                         help='Fragility file in csv format')
 
@@ -59,8 +53,8 @@ def get_args():
                         metavar='lookup_results.csv',
                         type=str,
                         nargs='?',
-                        default='locations_with_intensity.csv',
-                        help='Output filename for locations with their shakemap intensity.')
+                        default='locations_with_damageprob.csv',
+                        help='Output filename for locations with their probability of damage.')
 
     args = parser.parse_args()
 
@@ -71,19 +65,22 @@ def main(args=get_args()):
     """Main Script."""
 
     # Read fragility file into class object
-    print("Reading fragility curves from file...")
+    print("\nReading fragility curves from file...")
     frag = FragilityCurve(args.fragility_file)
+    print(f"\tIntensity Measure: {frag.intensity_measure}")
+    print(f"\tDamage States: {frag.damagestates().values}")
 
     # Read Shakemap into class object
-    print("Reading shakemap from file...")
+    print("\nReading shakemap from file...")
     if args.shakemap_unc is not None:
         shakemap = USGSshakemapGrid(args.shakemap, frag.intensity_measure, args.shakemap_unc)
     else:
         shakemap = USGSshakemapGrid(args.shakemap, frag.intensity_measure)
 
     # Read locations into pandas array
+    print("\nReading Locations...")
     locns = pd.read_csv(args.ifile)
-    print("\t...%i locations" % len(locns))
+    print(f"\t...{len(locns):,d} locations")
 
     # Get the mean/median and std deviation from the shakemap.
     median, stddev = shakemap.lookup(locns['lon'].values, locns['lat'].values)
@@ -97,18 +94,17 @@ def main(args=get_args()):
 
     # Convert intensities to probability of damage at each state
     print("Getting damage at locations...")
+
     # Loop through all damage states in the fragility curve
     for c in frag.damagestates():
         # Get the result of the interpolation, allow values over the max by setting them equal to the max.
         locns['prob_' + c] = frag.interp_damagestate(locns[frag.intensity_measure], c)
 
-    print(frag.mindamagestate())
-    print("\t...%i locations with a chance of damage" %
-          sum(locns['prob_' + frag.mindamagestate()] > 0.0))
+        print(f"\t{c:>16s}: {sum(locns['prob_' + c] >= 0.01):>6d} locations with >1% chance")
 
     # Write the output file
     locns.to_csv(args.ofile, index=False)
-    print(f"Written location details to {args.ofile}")
+    print(f"\nWritten location details to {args.ofile}")
 
     print("Finished")
 
